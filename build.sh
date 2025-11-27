@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+
 exit_with_error() {
     echo "Ошибка: $1" >&2
     exit "${2:-1}"
