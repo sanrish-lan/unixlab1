@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  worker:
+    build: .
+    image: concurrent-worker
+    volumes:
+      - shared_data:/data
+    deploy:
+      mode: replicated
+      replicas: 0
+
+  monitor:
+    image: alpine
+    volumes:
+      - shared_data:/data
+    command: sh -c "while true; do clear; echo 'Current Files'; ls -la /data; sleep 0.5; done"
+
+volumes:
+  shared_data:
