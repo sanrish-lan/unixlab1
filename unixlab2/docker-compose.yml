@@ -3,7 +3,6 @@ version: '3.8'
 services:
   worker:
     build: .
-    image: concurrent-worker
     volumes:
       - shared_data:/data
     deploy:
