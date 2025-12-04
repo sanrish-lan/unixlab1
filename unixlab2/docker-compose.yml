@@ -14,7 +14,7 @@ services:
     image: alpine
     volumes:
       - shared_data:/data
-    command: sh -c "while true; do clear; echo 'Current Files'; ls -la /data; sleep 0.5; done"
+    command: sh -c "while true; do clear; echo 'FILES & CONTENT'; grep -r . /data 2>/dev/null; sleep 0.5; done"
 
 volumes:
   shared_data:

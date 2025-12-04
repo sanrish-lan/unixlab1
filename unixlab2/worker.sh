@@ -26,7 +26,7 @@ while true; do
             fi
             i=$((i + 1))
         done
-    ) 200>"$LOCK_FILE"
+    ) 73>"$LOCK_FILE"
 
     CURRENT_FILE=$(cat /tmp/current_file)
     echo "[$CID] Created $CURRENT_FILE (Seq: $SEQ)"
