@@ -1,4 +1,4 @@
-obj-m += new_module_tsu.o
+obj-m += module_2_part.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
