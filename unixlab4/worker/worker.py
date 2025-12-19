@@ -1,53 +1,50 @@
-import pika
+from kafka import KafkaConsumer
 import os
 import json
 import requests
 import time
 import socket
 
-BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+TOPIC_NAME = 'url_checks'
+GROUP_ID = 'url_worker_group'
 WORKER_ID = socket.gethostname()
 
 
 def check_website(url):
-    print(f"[{WORKER_ID}] Начало проверки: {url}")
+    print(f"[{WORKER_ID}] Проверяю: {url}")
     try:
-        time.sleep(2)
+        time.sleep(2)  # Имитация нагрузки
         response = requests.get(url, timeout=5)
-        print(f"[{WORKER_ID}] Успех: {url} -> Status {response.status_code}")
+        print(f"[{WORKER_ID}] Готово: {url} -> Status {response.status_code}")
     except Exception as e:
-        print(f"[{WORKER_ID}] Ошибка при проверке {url}: {e}")
-
-
-def callback(ch, method, properties, body):
-    data = json.loads(body)
-    url = data.get('url')
-
-    check_website(url)
-
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+        print(f"[{WORKER_ID}] Ошибка: {url} -> {e}")
 
 
 def main():
-    print(f"[{WORKER_ID}] Запуск воркера. Ожидание подключения к брокеру...")
-    connection = None
+    print(f"[{WORKER_ID}] Запуск Consumer. Подключение к Kafka...")
 
-    while connection is None:
+    while True:
         try:
-            connection = pika.BlockingConnection(pika.URLParameters(BROKER_URL))
-        except pika.exceptions.AMQPConnectionError:
-            print(f"[{WORKER_ID}] Брокер недоступен, повторная попытка через 5 сек...")
+            consumer = KafkaConsumer(
+                TOPIC_NAME,
+                bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+                group_id=GROUP_ID,
+                auto_offset_reset='earliest',
+                enable_auto_commit=True,
+                value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+            )
+            break
+        except Exception as e:
+            print(f"[{WORKER_ID}] Kafka недоступна ({e}). Рестарт через 5 сек...")
             time.sleep(5)
 
-    channel = connection.channel()
-    channel.queue_declare(queue='url_check_queue', durable=True)
+    print(f"[{WORKER_ID}] Подключено к топику '{TOPIC_NAME}'. Жду задач...")
 
-    channel.basic_qos(prefetch_count=1)
-
-    channel.basic_consume(queue='url_check_queue', on_message_callback=callback)
-
-    print(f"[{WORKER_ID}] Ожидание задач...")
-    channel.start_consuming()
+    for message in consumer:
+        data = message.value
+        url = data.get('url')
+        check_website(url)
 
 
 if __name__ == '__main__':

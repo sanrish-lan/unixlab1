@@ -1,40 +1,37 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import pika
-import os
+from kafka import KafkaProducer
 import json
+import os
 
 app = FastAPI()
 
-BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+TOPIC_NAME = 'safe_tasks'
+
+producer = KafkaProducer(
+    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+    acks='all',
+    retries=5
+)
 
 
 class Task(BaseModel):
     url: str
 
 
-def publish_message(url: str):
-    try:
-        connection = pika.BlockingConnection(pika.URLParameters(BROKER_URL))
-        channel = connection.channel()
-        channel.queue_declare(queue='url_check_queue', durable=True)
-
-        message = json.dumps({'url': url})
-        channel.basic_publish(
-            exchange='',
-            routing_key='url_check_queue',
-            body=message,
-            properties=pika.BasicProperties(delivery_mode=2, ))
-        connection.close()
-    except Exception as e:
-        print(f"Error publishing to RabbitMQ: {e}")
-        raise e
-
-
 @app.post("/check")
 async def check_url(task: Task):
     try:
-        publish_message(task.url)
-        return {"status": "queued", "url": task.url, "message": "Задача отправлена работникам"}
+        future = producer.send(TOPIC_NAME, {'url': task.url})
+        result = future.get(timeout=10)
+
+        return {
+            "status": "queued",
+            "url": task.url,
+            "partition": result.partition,
+            "offset": result.offset
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Kafka Error: {str(e)}")
