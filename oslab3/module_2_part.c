@@ -3,6 +3,7 @@
 #include <linux/kernel.h>
 #include <linux/timekeeping.h>
 #include <linux/time64.h>
+#include <linux/time.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Kuznetsov Roman");
