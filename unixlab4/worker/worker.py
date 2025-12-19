@@ -14,7 +14,7 @@ WORKER_ID = socket.gethostname()
 def check_website(url):
     print(f"[{WORKER_ID}] Проверяю: {url}")
     try:
-        time.sleep(2)  # Имитация нагрузки
+        time.sleep(2)
         response = requests.get(url, timeout=5)
         print(f"[{WORKER_ID}] Готово: {url} -> Status {response.status_code}")
     except Exception as e:
