@@ -19,7 +19,8 @@ MODULE_VERSION("1.2");
 
 static struct proc_dir_entry *our_proc_file = NULL;
 
-static void calculate_result(char *buffer, size_t max_len) {
+static void calculate_result(char *buffer, size_t max_len)
+{
     struct timespec64 ts;
     struct tm tm_now, tm_future;
     uint64_t total_seconds;
@@ -36,7 +37,8 @@ static void calculate_result(char *buffer, size_t max_len) {
              (long)tm_future.tm_year + 1900);
 }
 
-static ssize_t reading(struct file *file_pointer, char __user *buffer, size_t buffer_length, loff_t *offset) {
+static ssize_t reading(struct file *file_pointer, char __user *buffer, size_t buffer_length, loff_t *offset)
+{
     char s[256];
     int len;
 
@@ -67,12 +69,14 @@ static const struct file_operations proc_file_fops = {
 };
 #endif
 
-static int __init uranus_init(void) {
+static int __init uranus_init(void)
+{
     pr_info("Welcome to the Tomsk State University\n");
 
     our_proc_file = proc_create(FILENAME, 0644, NULL, &proc_file_fops);
 
-    if (our_proc_file == NULL) {
+    if (our_proc_file == NULL)
+    {
         pr_alert("Error: Could not initialize /proc/%s\n", FILENAME);
         return -ENOMEM;
     }
@@ -80,7 +84,8 @@ static int __init uranus_init(void) {
     return 0;
 }
 
-static void __exit uranus_exit(void) {
+static void __exit uranus_exit(void)
+{
     proc_remove(our_proc_file);
     pr_info("Tomsk State University forever!\n");
 }
