@@ -13,7 +13,7 @@ MODULE_AUTHOR("Kuznetsov Roman");
 MODULE_DESCRIPTION("Unixlab3.2");
 MODULE_VERSION("1.2");
 
-#define FILENAME "lab"
+#define FILENAME "tsulab"
 #define URANUS_PERIOD_SEC 2650083840ULL
 #define ECLIPTIC_CORRECTION_SEC ((URANUS_PERIOD_SEC * 9) / 360)
 
@@ -31,11 +31,10 @@ static void calculate_result(char *buffer, size_t max_len) {
     time64_to_tm(total_seconds, 0, &tm_future);
 
     snprintf(buffer, max_len,
-             "Result: Uranus returns in %ld year\n",
+             "Current year is %ld\nResult: Uranus returns in %ld year\n",
              (long)tm_now.tm_year + 1900,
              (long)tm_future.tm_year + 1900);
 }
-
 
 static ssize_t reading(struct file *file_pointer, char __user *buffer, size_t buffer_length, loff_t *offset) {
     char s[256];
